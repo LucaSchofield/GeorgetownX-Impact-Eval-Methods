@@ -1,0 +1,119 @@
+install.packages("car")
+install.packages("nlme")
+install.packages("lmtest")
+
+#plot data 
+plot(data$time,data$flow,
+     ylab="Water Flow of the Nile",
+     ylim=c(0,4500),
+     xlab="Year",
+     type="l",
+     col="blue",
+     xaxt="n")
+
+#add x-axis year labels
+axis(1, at=1:60, labels = data$year)
+
+#add points 
+points(data$time, data$flow,
+       col="blue",
+       pch=20)
+
+#label the weather change 
+abline(v=27.5,lty=2)
+
+#preliminary analysis OLS regression 
+ols <- lm(flow ~ time + level + trend,
+                data=data)
+summary(model.ols)
+confint(model.ols) 
+
+
+#checking for autocorrelation 
+#Durbin Watson test 
+dwtest(model.ols,alternative="two.sided")
+R.version.string
+library(lmtest)
+
+dwtest(ols,alternative=c("two.sided"))
+
+#redisuals plot 
+plot(data$time, residuals(ols), type = 'o', pch=16, xlab='Time',ylab='OLS Residuals')
+
+
+#produce ACF plots
+# set 2 plots on 1 page, side by side
+par(mfrow=c(2,1))
+
+# produce plots 
+acf(residuals(ols))
+acf(residuals(ols),type='partial')
+
+
+#fi the gls regression model 
+library(nlme)
+
+model.p10 <- gls(flow ~time + level + trend,
+                 data=data,
+                 correlation=corARMA(p=10,form=~time),
+                 method="ML")
+summary(model.p10)
+
+
+#model checks
+# does adding more parameters useful 
+
+model.p11 <- update(model.p10,correlation=corARMA(p=11,form=~time))
+anova(model.p10,model.p11)
+
+#set to single plot
+par(mfrow=c(1, 1))
+
+qqnorm(residuals(model.p10))
+qqline(residuals(model.p10), col = "blue")
+
+qqplot(residuals, rnorm(length(residuals)))
+
+# plotting the results 
+
+plot(data$time,data$flow,
+     ylim = c(0,4500),
+     ylab = "Water Flow",
+     xlab="Year",
+     pch=20,
+     col="pink",
+     xaxt="n")
+
+#plot dates on x axis 
+axis(1, at=1:60,labels=data$year)
+
+#add line indicating weather pattern change 
+abline(v=27.5,lty="dotted")
+
+#plot the first line segment
+lines(data$time[1:27], fitted(model.p10)[1:27], col="red", lwd=2)
+
+#plot the second line segment 
+lines(data$time[28:60], fitted(model.p10)[28:60], col="red", lwd=2)
+
+#plotting the counterfactual
+
+segments(1,
+         model.p10$coef[1]+model.p10$coef[2],
+         60,
+         model.p10$coef[1]+model.p10$coef[2]*60,
+         lty=2,
+         lwd=2,
+         col="red")
+
+#predict the value at 25 years after the weather change 
+pred <- fitted(model.p10)[52]
+
+#estimate the countercatual at the same time period
+cfac <- model.p10$coef[1] + model.p10$coef[2]*52
+
+#absolute change at 25 years 
+pred - cfac
+
+#relative change at 25 years 
+(pred - cfac) / cfac
