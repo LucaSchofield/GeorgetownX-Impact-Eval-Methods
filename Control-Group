@@ -1,0 +1,173 @@
+#Adding a control group 
+#adding the St Marys (Huron) to the Nile 
+
+#########################
+# Read in dataset 
+#########################
+
+data<- read.csv("C:\\Users\\lschofield\\OneDrive - KPMG\\Documents\\Business Development\\UBCx - ITSx\\data\\nilehuron.csv")
+data
+
+#########################
+# download libraries 
+########################
+
+install.packages("nlme", "car")
+library(nlme)
+library(car)
+
+#set variables 
+data$time <- c(1:60,1:60)
+data$level <- c(rep(0,27),rep(1,33),rep(0,27),rep(1,33))
+data$trend <- c(rep(0,27),1:33,rep(0,27),1:33)
+data$niletime <- data$nile * data$time
+data$nilelevel <- data$nile * data$level
+data$niletrend <- data$nile * data$trend
+
+#plot the time series for the Nile river 
+
+plot(data$time[1:60], data$flow[1:60],
+     ylab ="Water flow",
+     ylim =c(0,4500),
+     xlab = "Year",
+     type="l",
+     col="red",
+     xaxt="n")
+
+#add in control group 
+#use piints to add into existing plot 
+points(data$time[61:120], data$flow[61:120],
+       type='l',
+       col="blue")
+
+#add in x-axis year labels 
+axis(1, at=1:60, labels=data$year[1:60])
+
+#add in points for the figure - Nile
+points(data$time[1:60], data$flow[1:60],
+       col="red",
+       pch=20)
+
+#add in points for the figure - Huron 
+points(data$time[61:120], data$flow[61:120],
+       col="blue",
+       pch=20)
+
+
+#label the weather change 
+abline(v=27.5, lty=2)
+
+
+# add in legend 
+legend(x=3, y=1000, legend=c("Nile", "Huron"),
+       col=c("red", "blue"), pch=20)
+
+
+###################
+# Visually inspecting
+###################
+
+#wildpoints include drought period ~1913
+#not many other outliers 
+#not significant variability 
+#curative seems to be reasonable 
+#no missing data points i.e. zeros 
+#is the control appropriate - higher difference pre 
+#no co-interventions that seem to appear 
+
+################
+# Modelling 
+################
+
+#preliminary OLS regression 
+#no auto correlation 
+
+model_ols <- lm(flow ~ time + nile + niletime + level + trend + nilelevel + niletrend,
+               data =data)
+
+#see summary 
+summary(model_ols)
+
+#get confidence intervals for the coefficients 
+confint(model.ols)
+
+#testing for autocorrelation 
+
+#Durbin Watson test, 12 time periods 
+#12 chosen arbitraty, 
+
+dwt(model_ols,max.lag=12,alternative="two.sided")
+
+#residuals plot 
+#graph residuals 
+
+plot(data$time[1:60],
+     residuals(model_ols)[1:60],
+     type='o',
+     pch=16,
+     xlab='Time',
+     ylab='OLS Residuals',
+     col="red")
+abline(h=0,lty=2)
+
+
+#producing ACF plots
+#setting up 2 records on a page 
+
+par(mfrow=c(2,1))
+
+#produce plots 
+acf(residuals(model_ols))
+acf(residuals(model_ols), type='partial')
+
+###############################
+#Running the final model 
+###############################
+
+#fit the GLS regression model
+model_p10 <- gls(flow ~ time+ nile + niletime + level + trend + nilelevel + niletrend,
+                 data = data,
+                 correlation = corARMA(p=10,form=~time | nile),
+                 method="ML")
+
+#summary 
+summary(model_p10)
+confint(model_p10)
+
+
+##checking the model 
+#likelihood ratio test
+
+model_p10q1 <- update(model_p10,
+                      correlation=corARMA(q=1,p=10,form=~time | nile))
+anova(model_p10,model_p10q1)
+
+model_p11 <- update(model_p10,
+                    correlation=corARMA(p=11,form=~time|nile))
+anova(model_p10,model_p11)
+
+
+###############################
+#predict absolute and relative change
+###############################
+
+
+#predicting changes 
+#counterfactual and predicted estimate
+
+#predicted values at 25 years after the weather change 
+
+pred <- fitted(model_p10)[52]
+pred
+
+#estimate the counterfactual at the same time point 
+cfac <- model_p10$coef[1] + model_p10$coef[2]*52 +
+  model_p10$coef[3] + model_p10$coef[4] * 52 + 
+  model_p10$coef[5] + model_p10$coef[6] * 25
+cfac
+
+#absolute change at 25 years 
+pred - cfac
+
+#relative change at 25 years 
+(pred - cfac) / cfac 
