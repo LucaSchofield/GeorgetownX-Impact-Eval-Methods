@@ -1,24 +1,3 @@
-###################################
-# Load the necessary libraries
-###################################
-
-library(nlme)
-library(car)
-
-
-########################
-# Read in the dataset
-########################
-
-# Two options: either use "import dataset" in RStudio, or use read.csv
-data<- read.csv("C:\\Users\\lschofield\\OneDrive - KPMG\\Documents\\Business Development\\UBCx - ITSx\\data\\nile.csv")
-data
-
-
-########################
-# Initial Plot
-########################
-
 # Plot outcome variable versus time
 plot(data$time,data$flow,
      ylab="Water Flow of the Nile",
