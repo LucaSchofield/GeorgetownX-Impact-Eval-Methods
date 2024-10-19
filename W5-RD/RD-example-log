@@ -3,8 +3,7 @@
 ###################################
 
 # Read in the dataset
-dataset <- read.csv("/Users/lukeschofield/Desktop/EdX/UBCx - Policy Analysis using ITS/Data/electoral_rd.csv",header=T)
-dataset
+dataset <- read.csv("path_to_your_data")  # Replace with a generic path
 
 # Constuct Variables
 # dmargin = democratic margin of victory <- forcing variable
