@@ -11,8 +11,7 @@ library(car)
 ########################
 
 # Two options: either use "import dataset" in RStudio, or use read.csv
-data<- read.csv("C:\\Users\\lschofield\\OneDrive - KPMG\\Documents\\Business Development\\UBCx - ITSx\\data\\thailand.csv")
-data
+data <- read.csv("path_to_your_data")  # Replace with a generic path
 
 ########################
 # Initial Plot
