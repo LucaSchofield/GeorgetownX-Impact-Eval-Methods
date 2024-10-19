@@ -5,7 +5,7 @@
 # Read in dataset 
 #########################
 
-dataset <- read.csv("path_to_your_data/nilehuron.csv")  # Replace with a generic path
+data <- read.csv("path_to_your_data/nilehuron.csv")  # Replace with a generic path
 
 #########################
 # download libraries 
