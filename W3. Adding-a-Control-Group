@@ -5,8 +5,7 @@
 # Read in dataset 
 #########################
 
-data<- read.csv("C:\\Users\\lschofield\\OneDrive - KPMG\\Documents\\Business Development\\UBCx - ITSx\\data\\nilehuron.csv")
-data
+dataset <- read.csv("path_to_your_data/nilehuron.csv")  # Replace with a generic path
 
 #########################
 # download libraries 
